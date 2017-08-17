@@ -5,12 +5,12 @@
 # Includes functionality to import custom SSL certificates into UniFi keystore.
 # License: Apache-2.0
 # Github: https://github.com/goofball222/unifi
-# Script version: 0.2.1
+# Script version: 0.2.2
 # Last updated date: 2017-08-16
 
 [ "$DEBUG" == 'true' ] && set -x
 
-SCRIPT_VERSION="0.2.1"
+SCRIPT_VERSION="0.2.2"
 
 echo "$(date +"[%Y-%m-%d %T,%3N]") unifi-init script version ${SCRIPT_VERSION} startup."
 echo "$(date +"[%Y-%m-%d %T,%3N]") Setting params/variables/paths."
