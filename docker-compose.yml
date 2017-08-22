@@ -1,7 +1,7 @@
 version: '2.2'
 services:
   unifi:
-    image: "goofball222/unifi:latest"
+    image: "goofball222/unifi:unifi54"
     init: true
     ports:
      - "3478:3478/udp"
@@ -12,6 +12,6 @@ services:
      - "8843:8843"
      - "10001:10001/udp"
     volumes:
-     - /path/to/unifi/certs:/usr/lib/unifi/cert
-     - /path/to/unifi/data:/usr/lib/unifi/data
-     - /path/to/unifi/logs:/usr/lib/unifi/logs
+     - /DATA_VOLUME/unifi/cert:/usr/lib/unifi/cert
+     - /DATA_VOLUME/unifi/data:/usr/lib/unifi/data
+     - /DATA_VOLUME/unifi/logs:/usr/lib/unifi/logs
