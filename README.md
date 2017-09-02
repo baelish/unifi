@@ -6,8 +6,8 @@
 | Tag | UniFi Version | Description | Release Date |
 | --- | :---: | --- | :---: |
 | [latest](https://github.com/goofball222/unifi/blob/master/stable/Dockerfile) | [5.5.20](https://community.ubnt.com/t5/UniFi-Updates-Blog/UniFi-5-5-20-Stable-has-been-released/ba-p/2011817) | UniFi latest stable release | 2017-07-31 |
-| [sc](https://github.com/goofball222/unifi/blob/master/sc/Dockerfile) | [5.5.21](https://community.ubnt.com/t5/UniFi-Beta-Blog/UniFi-5-5-21-Stable-Candidate-has-been-released/ba-p/2021171) | UniFi latest stable candidate release | 2017-08-08 |
-| [testing](https://github.com/goofball222/unifi/blob/master/testing/Dockerfile) | [5.6.14](https://community.ubnt.com/t5/UniFi-Beta-Blog/UniFi-5-6-14-Testing-has-been-released/ba-p/2022323) | UniFi latest testing release | 2017-08-09 |
+| [sc](https://github.com/goofball222/unifi/blob/master/sc/Dockerfile) | [5.5.23](https://community.ubnt.com/t5/UniFi-Beta-Blog/UniFi-5-5-23-Stable-Candidate-has-been-released/ba-p/2049377) | UniFi latest stable candidate release | 2017-09-01 |
+| [testing](https://github.com/goofball222/unifi/blob/master/testing/Dockerfile) | [5.6.16](https://community.ubnt.com/t5/UniFi-Beta-Blog/UniFi-5-6-16-Testing-has-been-released/ba-p/2049379) | UniFi latest testing release | 2017-09-01 |
 | [unstable](https://github.com/goofball222/unifi/blob/master/unstable/Dockerfile) | [5.6.12](https://community.ubnt.com/t5/UniFi-Beta-Blog/UniFi-5-6-12-Unstable-has-been-released/ba-p/2005576) | UniFi latest unstable release | 2017-07-26 |
 | [unifi54](https://github.com/goofball222/unifi/blob/unifi54/stable/Dockerfile) | [5.4.19](https://community.ubnt.com/t5/UniFi-Updates-Blog/UniFi-5-4-19-Stable-has-been-released/ba-p/1995714) | UniFi LTS v5.4 latest stable release | 2017-07-17 |
 | [unifi54-sc](https://github.com/goofball222/unifi/blob/unifi54/sc/Dockerfile) | [5.4.19](https://community.ubnt.com/t5/UniFi-Updates-Blog/UniFi-5-4-19-Stable-Candidate-has-been-released/ba-p/1990323) | UniFi LTS v5.4 latest stable candidate release | 2017-07-07 |
@@ -16,13 +16,28 @@
 
 ---
 
-* **2017-08-21:**
-   * Moved to init-script and custom SSL support across all tags.
-   * All UniFi versions remain unchanged.
-   * Previously built static specific version tags remain unchanged (still use supervisord, no custom SSL support).
+**FROM 2017-09-01 ONWARD: For security and attack vector reduction this container is now built to run with an internal user/group of unifi having a UID/GID of 999. Make sure you set the ownership on any existing mapped volumes and data accordingly before startup.**
+
+IE: `chown -r 999:999 /DATA_VOLUME/unifi/{cert,data,logs}`
+
+**ALWAYS MAKE A VERIFIED BACKUP BEFORE UPDATING**
+
+* NEW OPTION - [system.properties](https://help.ubnt.com/hc/en-us/articles/205202580-UniFi-system-properties-File-Explanation) settings can now be passed to the container as -e/--env flags at startup. This allows for a much easier automation/HA/deployment setup for this container [(more detail and a PDF with examples here)](https://community.ubnt.com/t5/UniFi-Wireless-Beta/Unifi-Controller-High-Availability/m-p/1801933/highlight/true#M43494). Envrionment variables must be in ALL CAPS and replace "." with "_".
+
+Example:
+
+| system.properties | environment variable |
+| --- | --- |
+| unifi.db.extraargs | UNIFI_DB_EXTRAARGS |
+| unifi.https.hsts | UNIFI_HTTPS_HSTS |
+
+* This also allows relatively easy setup for an [external Mongo DB connection](https://community.ubnt.com/t5/UniFi-Wireless/External-MongoDB-Server/m-p/1711073/highlight/true#M188357). That functionality is outside the scope of this README and is left as an exercise for the interested reader.
+
 ---
+
 * [Recent changes, see: GitHub CHANGELOG.md](https://github.com/goofball222/unifi/blob/master/CHANGELOG.md)
 * [Report any bugs, issues or feature requests on GitHub](https://github.com/goofball222/unifi/issues)
+
 ---
 
 **MAKE A BACKUP OF YOUR DATA BEFORE INSTALLING UPDATES.**
@@ -53,58 +68,58 @@ This container exposes the following ports (see: https://help.ubnt.com/hc/en-us/
 
 **The most basic way to start this container:**
 
-```
+```bash
 $ docker run --init --name unifi -d \
-	-p 3478:3478/udp -p 6789:6789 -p 8080:8080 \
-	-p 8443:8443 -p 8880:8880 -p 8843:8843 \
-	goofball222/unifi
+    -p 3478:3478/udp -p 6789:6789 -p 8080:8080 \
+    -p 8443:8443 -p 8880:8880 -p 8843:8843 \
+    goofball222/unifi
 ```  
 ---
 
 **Recommended:**
 Have the container store the config/databases (recommended for persistence), logs on your filesystem instead (recommended for troubleshooting!), and allow for remapping ports with NO layer 2 discovery (layer 3/remote controller):
 
-```
+```bash
 $ docker run --init --name unifi -d \
-	-p 3478:3478/udp -p 6789:6789 -p 8080:8080 \
-	-p 8443:8443 -p 8880:8880 -p 8843:8843 \
-	-v /DATA_VOLUME/unifi/certs:/usr/lib/unifi/cert  \
-	-v /DATA_VOLUME/unifi/data:/usr/lib/unifi/data  \
-	-v /DATA_VOLUME/unifi/logs:/usr/lib/unifi/logs \
-	goofball222/unifi
+    -p 3478:3478/udp -p 6789:6789 -p 8080:8080 \
+    -p 8443:8443 -p 8880:8880 -p 8843:8843 \
+    -v /DATA_VOLUME/unifi/certs:/usr/lib/unifi/cert  \
+    -v /DATA_VOLUME/unifi/data:/usr/lib/unifi/data  \
+    -v /DATA_VOLUME/unifi/logs:/usr/lib/unifi/logs \
+    goofball222/unifi
 ```
 ---
 
 **To enable layer 2/local LAN discovery:**
 
-```
+```bash
 $ docker run --init --name unifi -d \
-	-p 3478:3478/udp -p 6789:6789 -p 8080:8080 \
-	-p 8443:8443 -p 8880:8880 -p 8843:8843 \
-	-p 10001:10001/udp \
-	-v /DATA_VOLUME/unifi/certs:/usr/lib/unifi/cert  \
-	-v /DATA_VOLUME/unifi/data:/usr/lib/unifi/data  \
-	-v /DATA_VOLUME/unifi/logs:/usr/lib/unifi/logs \
-	goofball222/unifi
+    -p 3478:3478/udp -p 6789:6789 -p 8080:8080 \
+    -p 8443:8443 -p 8880:8880 -p 8843:8843 \
+    -p 10001:10001/udp \
+    -v /DATA_VOLUME/unifi/certs:/usr/lib/unifi/cert  \
+    -v /DATA_VOLUME/unifi/data:/usr/lib/unifi/data  \
+    -v /DATA_VOLUME/unifi/logs:/usr/lib/unifi/logs \
+    goofball222/unifi
 ```
 ---
 
 **Alternative suggested by [rogierlommers](https://hub.docker.com/r/rogierlommers/):**
 
 Use --network=host mode. Does not allow for port remapping. You may need to manually adjust host firewall settings to allow traffic. Running a container in this mode is considered insecure:
-**Please make sure to read the "Network: host" section of https://docs.docker.com/engine/reference/run/ and understand the implications of this setting before using.**
+**Please make sure to read the "NETWORK: HOST" section of the [Docker "run" reference](https://docs.docker.com/engine/reference/run/#network-settings) and understand the implications of this setting before using.**
 
-```
+```bash
 $ docker run --init --name unifi -d \
-	--network=host \
-	-v /DATA_VOLUME/unifi/certs:/usr/lib/unifi/cert  \
-	-v /DATA_VOLUME/unifi/data:/usr/lib/unifi/data  \
-	-v /DATA_VOLUME/unifi/logs:/usr/lib/unifi/logs \
-	goofball222/unifi
+    --network="host" \
+    -v /DATA_VOLUME/unifi/certs:/usr/lib/unifi/cert  \
+    -v /DATA_VOLUME/unifi/data:/usr/lib/unifi/data  \
+    -v /DATA_VOLUME/unifi/logs:/usr/lib/unifi/logs \
+    goofball222/unifi
 ```
 ---
 
-**Example `docker-compose.yml` file for use with [Docker Compose](https://docs.docker.com/compose/), courtesy of Docker Hub user [jesk](https://hub.docker.com/r/jesk/):**
+**Example [`docker-compose.yml`](https://raw.githubusercontent.com/goofball222/unifi/master/docker-compose.yml) file for use with [Docker Compose](https://docs.docker.com/compose/), courtesy of Docker Hub user [jesk](https://hub.docker.com/r/jesk/):**
 
 ```
 version: '2.2'
