@@ -1,3 +1,5 @@
+* **2017-09-08:**
+    * Create unifi55 branch allowing for v5.6.X stable candidates/stable and v5.5.X move to LTS
 * **2017-09-01:**
     * Update sc VERSION to [5.5.23](https://community.ubnt.com/t5/UniFi-Beta-Blog/UniFi-5-5-23-Stable-Candidate-has-been-released/ba-p/2049377)
     * Update testing VERSION to [5.6.16](https://community.ubnt.com/t5/UniFi-Beta-Blog/UniFi-5-6-16-Testing-has-been-released/ba-p/2049379)
